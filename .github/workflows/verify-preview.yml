@@ -1,0 +1,26 @@
+name: Verify public HTML preview
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/verify-preview.yml, index.html]
+  workflow_dispatch:
+jobs:
+  public-html:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check public HTTPS HTML endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          url="https://raw.githack.com/jjuyp/italy-greece-honeymoon-2027/main/index.html"
+          echo "Checking $url"
+          status=$(curl -L -sS --max-time 30 -o /tmp/amore-site.html -w '%{http_code}' "$url")
+          echo "HTTP status: $status"
+          test "$status" = "200"
+          head -c 140 /tmp/amore-site.html
+          echo
+          grep -qi 'AMORE & AEGEAN' /tmp/amore-site.html
+          type=$(curl -L -sS --max-time 30 -o /dev/null -w '%{content_type}' "$url")
+          echo "Content-Type: $type"
+          [[ "$type" == *text/html* ]]
+          echo "PUBLIC_SITE_VERIFIED: $url"
